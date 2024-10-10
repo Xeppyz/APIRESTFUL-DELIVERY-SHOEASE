@@ -2,6 +2,7 @@ const { map } = require('bluebird');
 const User = require('../models/user');
 const jwt = require('jsonwebtoken');
 const keys = require('../config/keys');
+const Rol = require('../models/rol');
 
 module.exports = {
     async getAll(req, res, next){
@@ -24,9 +25,11 @@ module.exports = {
             const user = req.body;
             const data = await User.create(user);
 
+            await Rol.create(data.id, 1);// Rol por defecto (CLIENTE)
+
             return res.status(201).json({
                 success: true,
-                message: 'El registro se realizo correctamente',
+                message: 'El registro se realizo correctamente, ahora puedes iniciar sesión',
                 data: data.id
             });
 
@@ -68,8 +71,10 @@ module.exports = {
                         email: myuser.email,
                         phone: myuser.phone,
                         image: myuser.image,
-                        session_token: `JWT ${token}`
+                        session_token: `JWT ${token}`,
+                        roles: myuser.roles
                     }
+                    console.log(`USUARIO ENVIADO ${data}`);
                     return res.status(201).json({
                         success: true,
                         message: 'Usuario ha sido autentificado',
