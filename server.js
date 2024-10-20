@@ -8,6 +8,7 @@ const { error } = require('console');
 const multer = require('multer');
 const admin = require('firebase-admin');
 const servicesAccount = require('./serviceAccountKey.json');
+const passport = require('passport');
 
 
 /*
@@ -35,6 +36,11 @@ app.use(express.urlencoded({
     extended: true
 }));
 app.use(cors());
+// Inicializa Passport
+app.use(passport.initialize());
+//app.use(passport.session());
+require('./config/passport')(passport); // Importa la configuración de Passport
+
 app.disable('x-powerd-by');
 
 app.set('port', port);
@@ -42,7 +48,7 @@ app.set('port', port);
 //Llamando a las rutas
 users(app, upload);
 
-server.listen(3000, '192.168.3.39' || 'localhost', function(){
+server.listen(3000, '192.168.1.24' || 'localhost', function(){
     console.log('Application nodejs' + port + 'Starts...')
 });
 
