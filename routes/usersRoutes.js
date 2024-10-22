@@ -14,6 +14,8 @@ module.exports = (app, upload) => {
 
     app.post('/api/users/login', UserController.login);
 
+    app.post('/api/users/logout', UserController.logout);
+
     //UPDATE DATA
 
     app.put('/api/users/update', passport.authenticate('jwt', { session: false }), upload.array('image', 1), UserController.update);

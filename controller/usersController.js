@@ -137,59 +137,89 @@ module.exports = {
       },
       
     
+    
       async login(req, res, next) {
+
+        //Este metodo me daba error pero al cambiar la constante myuser se arregló ._.
         try {
-          const { email, pw } = req.body;
-          const myuser = await User.findByEmail(email);
-      
-          if (!myuser) {
-            return res.status(401).json({
-              success: false,
-              message: 'Usuario o email no encontrado',
+            const email = req.body.email;
+            const pw = req.body.pw;
+            const myuser = await User.findByEmail(email);
+    
+            if (!myuser) {
+                return res.status(401).json({
+                    success: false,
+                    message: 'Usuario o email no encontrado'
+                });
+            }
+    
+            try {
+                if (User.isPwMatch(pw, myuser.pw)) {
+                    const token = jwt.sign({ id: myuser.id, email: myuser.email }, keys.secretOrKey, {
+                        //expiresIn: (60 * 60 * 24) // una hora
+                       // expiresIn: (60 * 3) // 2 min
+                    });
+                    const data = {
+                        id: myuser.id,
+                        name: myuser.name,
+                        lastname: myuser.lastname,
+                        email: myuser.email,
+                        phone: myuser.phone,
+                        image: myuser.image,
+                        session_token: `JWT ${token}`,
+                        roles: myuser.roles
+                    }
+
+                    await User.updateToken(myuser.id,`JWT ${token}`);
+                    console.log(`USUARIO ENVIADO ${data}`);
+                    return res.status(201).json({
+                        success: true,
+                        message: 'Usuario ha sido autentificado',
+                        data: data
+                    });
+                } else {
+                    return res.status(401).json({
+                        success: false,
+                        message: 'La contraseña es incorrecta'
+                    });
+                }
+            } catch (pwError) {
+                console.log(`Password Match Error: ${pwError}`);
+                return res.status(500).json({
+                    success: false,
+                    message: 'Error al verificar la contraseña',
+                    error: pwError
+                });
+            }
+        } catch (error) {
+            console.log(`Error: ${error}`);
+            return res.status(501).json({
+                success: false,
+                message: 'Error al momento de hacer login',
+                error: error
             });
-          }
-      
-          if (User.isPwMatch(pw, myuser.pw)) {
-            // Genera el token con los datos del usuario
-            const token = jwt.sign(
-              { id: myuser.id, email: myuser.email },
-              keys.secretOrKey,
-              { expiresIn: '1h' } // Token válido por 1 hora
-            );
-      
-            const data = {
-              id: myuser.id,
-              name: myuser.name,
-              lastname: myuser.lastname,
-              email: myuser.email,
-              phone: myuser.phone,
-              image: myuser.image,
-              session_token: `Bearer ${token}`, // Cambiado a Bearer
-              roles: myuser.roles,
-            };
-      
-            // Guarda el token en la base de datos
-            await User.updateToken(myuser.id, `Bearer ${token}`);
-            console.log(`USUARIO ENVIADO: ${JSON.stringify(data)}`);
-      
+        }
+    },
+
+    async logout(req, res, next) {
+          try{
+            
+            const id = req.body.id;
+           console.log(`IDDDD ${req.body.id}`);
+            await User.updateToken(id, null);
+
             return res.status(201).json({
               success: true,
-              message: 'Usuario ha sido autentificado',
-              data: data,
+              message: 'La sesión del usuario se ha cerrado correctamente!',
             });
-          } else {
-            return res.status(401).json({
+
+          }catch (error) {
+            console.log(`Error: ${error}`);
+            return res.status(501).json({
               success: false,
-              message: 'La contraseña es incorrecta',
+              message: 'Hubo un error al momento de cerrar sesión!',
+              error: error.message,
             });
           }
-        } catch (error) {
-          console.log(`Error: ${error}`);
-          return res.status(501).json({
-            success: false,
-            message: 'Error al momento de hacer login',
-            error: error,
-          });
-        }
-      }
+    }
 };
