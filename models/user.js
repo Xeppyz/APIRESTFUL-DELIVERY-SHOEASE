@@ -25,6 +25,7 @@ User.findByEmail = (email) => {
     U.phone, 
     U.pw,
     U.session_token,
+    U.notification_token,
 	json_agg(
 		json_build_object(
 			'id', R.id,
@@ -45,7 +46,7 @@ User.findByEmail = (email) => {
 }
 
 
-    User.findByUserId = (id) => {
+User.findByUserId = (id) => {
         const sql = `
         SELECT
         U.id, 
@@ -56,6 +57,7 @@ User.findByEmail = (email) => {
         U.phone, 
         U.pw,
         U.session_token,
+        U.notification_token,
         json_agg(
             json_build_object(
                 'id', R.id,
@@ -73,7 +75,7 @@ User.findByEmail = (email) => {
             GROUP BY U.id
         `
         return db.oneOrNone(sql, id);
-    }
+ }
 
 
 User.create = (user) => {
@@ -108,7 +110,7 @@ User.create = (user) => {
 }
 
 User.findById = (id, callback) =>{
-    const sql = `SELECT id, email, name, lastname, image, phone, pw, session_token
+    const sql = `SELECT id, email, name, lastname, image, phone, pw, session_token, notification_token
 FROM users 
 WHERE id = $1`;
 
@@ -156,6 +158,22 @@ User.updateToken = (id,token) => {
     ]);
 }
 
+User.updateNotificationToken = (id,token) => {
+    const sql = `
+    UPDATE
+        users
+    SET 
+        notification_token = $2
+    WHERE 
+        id = $1
+    `;
+
+    return db.none(sql, [
+        id,
+        token
+      
+    ]);
+}
 
 User.isPwMatch = (userPw, hash) => {
     const myPasswordHashed = crypto.createHash('md5').update(userPw).digest('hex');
@@ -163,5 +181,32 @@ User.isPwMatch = (userPw, hash) => {
         return true;
     }
     return false;
+}
+
+User.findDeliveryMen = () => {
+    const sql = `
+    SELECT
+    U.id, 
+    U.email,
+    U.name, 
+    U.lastname,
+    U.image, 
+    U.phone, 
+    U.pw,
+    U.session_token,
+    U.notification_token
+FROM users AS U
+INNER JOIN 
+    user_has_role AS UHR
+ON 
+    UHR.id_user = U.id
+INNER JOIN 
+    roles AS R
+ON 
+    R.id = UHR.id_rol
+WHERE 
+    R.id = 3
+    `;
+    return db.manyOrNone(sql);
 }
 module.exports = User;

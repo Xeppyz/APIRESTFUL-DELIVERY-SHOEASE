@@ -8,6 +8,7 @@ module.exports = (app, upload) => {
     app.get('/api/users/getAll', UserController.getAll);
 
     app.get('/api/users/findById/:id', passport.authenticate('jwt', { session: false }), UserController.findById);
+    app.get('/api/users/findDeliveryMen', passport.authenticate('jwt', { session: false }), UserController.findDeliveryMen);
 
     //save data
     app.post('/api/users/create', upload.array('image', 1),UserController.registerWithImage);
@@ -19,6 +20,9 @@ module.exports = (app, upload) => {
     //UPDATE DATA
 
     app.put('/api/users/update', passport.authenticate('jwt', { session: false }), upload.array('image', 1), UserController.update);
+
+    
+    app.put('/api/users/updateNotificationToken', passport.authenticate('jwt', { session: false }), UserController.updateNotificationToken);
 
     
 }

@@ -41,6 +41,22 @@ module.exports = {
     },
 
 
+    async findDeliveryMen(req, res, next){
+        try{
+
+            const data = await User.findDeliveryMen();
+            console.log(`Repartidores: ${data}`);
+            return res.status(201).json(data);
+        }catch(error){
+            console.log(`Error: ${error}`);
+            return res.status(501).json({
+                success: false,
+                message: 'Error al obtener los repartidores'
+            }); 
+
+        }
+    },
+
 
     async register(req, res, next){
         try{
@@ -65,6 +81,29 @@ module.exports = {
             });
         }
     },
+
+    async updateNotificationToken(req, res, next){
+        try{
+            const body = req.body;
+            console.log(`INFORMACIÓN DEL USUARIO:`, body)
+            await User.updateNotificationToken(body.id, body.notification_token);
+
+            return res.status(201).json({
+                success: true,
+                message: 'El token de notificación se almacenó correctamente'
+            });
+
+        }catch(error){
+            console.log(`Error: ${error}`);
+            return res.status(501).json({
+                success: false,
+                message: 'Hubo un error con el registro!',
+                error: error
+             
+            });
+        }
+    },
+
 
  
     async registerWithImage(req, res, next){
@@ -156,6 +195,7 @@ module.exports = {
             try {
                 if (User.isPwMatch(pw, myuser.pw)) {
                     const token = jwt.sign({ id: myuser.id, email: myuser.email }, keys.secretOrKey, {
+                        //SESSION TOKEN EXPIRA CADA VEZ QUE VOS CONFIGURES
                         //expiresIn: (60 * 60 * 24) // una hora
                        // expiresIn: (60 * 3) // 2 min
                     });
